@@ -17,11 +17,18 @@ interface moneyPPP {
 }
 
 export const Moneys: React.FC<moneyPPP> = (name, money) => {
+  /*объект, полученный с апи*/
   const [appState, setAppState] = useState({});
+  /*Колличество нной валюты, которое пишется в верхний инпут*/
   const [get, onChangeGet] = React.useState("");
-  const [post, onChangePost] = React.useState("");
-  const [number, onChangeNumber] = React.useState(null);
-  const [selectedValue, setSelectedValue] = useState("java");
+  /*численное значение первой валюты относительно доллара*/
+  const [post, onChangePost] = React.useState(0.0);
+  const [selectedValue1, setSelectedValue1] = useState("java");
+  const [selectedValue2, setSelectedValue2] = useState("java");
+  /*численное значение второй валюты относительно доллара*/
+  const [perem, setPerem] = useState(0.0);
+  /*Результат, который выводится во второй инпут*/
+  const [result, setResult] = useState("");
   const getMoney = async () => {
     const apiUrl =
       "http://api.currencylayer.com/live?access_key=3f5e73141e57b0d552671cc7dc23135b";
@@ -29,11 +36,17 @@ export const Moneys: React.FC<moneyPPP> = (name, money) => {
       const allMoney = response.data.quotes;
       setAppState(allMoney);
     });
-    
+  };
+  const Convert = async () => {
+    setResult(String((Number(get) / Number(post)) * perem));
+    console.log(appState);
+    console.log("post=", post);
+    console.log("perem=", perem);
+    console.log("get=", Number(get));
+    console.log("result=", result);
   };
   useEffect(() => {
     getMoney();
-    
   }, []);
 
   return (
@@ -45,17 +58,23 @@ export const Moneys: React.FC<moneyPPP> = (name, money) => {
             style={styles.input}
             onChangeText={onChangeGet}
             value={get}
-            placeholder=""
+            placeholder={get}
           />
-          
+
           <Picker
-            selectedValue={selectedValue}
+            selectedValue={selectedValue1}
             style={{ height: 50, width: 150 }}
-            onValueChange={(itemValue, itemIndex) =>
-             {setSelectedValue(itemValue) }
-            }
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedValue1(itemValue);
+              onChangePost(itemValue);
+            }}
           >
-            {Object.keys(appState).map(key => <Picker.Item label={key} value={appState[key]}  />)}
+            {Object.keys(appState).map((key) => (
+              <Picker.Item
+                label={key}
+                value={appState[key as keyof typeof appState]}
+              />
+            ))}
           </Picker>
         </View>
         <View style={styles.flex}>
@@ -63,30 +82,43 @@ export const Moneys: React.FC<moneyPPP> = (name, money) => {
             editable={false}
             selectTextOnFocus={false}
             style={styles.input}
-            onChangeText={onChangePost}
-            value={post}
+            keyboardType="numeric"
+            onChangeText={setResult}
+            value={String(result)}
           />
           <Picker
-            selectedValue={selectedValue}
+            selectedValue={selectedValue2}
             style={{ height: 50, width: 150 }}
-            onValueChange={(itemValue, itemIndex) =>
-              setSelectedValue(itemValue)
-            }
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedValue2(itemValue);
+              setPerem(itemValue);
+            }}
           >
-            {Object.keys(appState).map(key => <Picker.Item label={key} />)}
+            {Object.keys(appState).map((key) => (
+              <Picker.Item
+                label={key}
+                value={appState[key as keyof typeof appState]}
+              />
+            ))}
           </Picker>
         </View>
       </SafeAreaView>
-      <Button title="app" onPress={() => console.log(appState)} />
+      <View style={styles.button}>
+        <Button
+          title="Посчитать"
+          onPress={() => Convert()}
+        />
+      </View>
     </View>
   );
 };
 const styles = StyleSheet.create({
   container: {
     width: "100vw",
-    height: "60vh",
+    //height: "40vh",
     backgroundColor: "black",
-    marginTop: "20vh",
+    marginTop: "30vh",
+    paddingBottom:"3vh"
   },
   text: {
     color: "white",
@@ -111,6 +143,11 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   center: {
-    marginTop: "17vh",
+    marginTop: "5vh",
+  },
+  button: {
+    marginRight: "20vw",
+    marginLeft: "20vw",
+    marginTop:"2vh"
   },
 });
